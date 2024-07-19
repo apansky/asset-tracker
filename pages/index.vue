@@ -2,9 +2,14 @@
   <div class="container mx-auto">
     <div class="flex items-center justify-between py-4">
       <h1 class="text-2xl text-gray-800">Asset tracker</h1>
-      <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105" @click="handleAddDialog(true)">
-        Add asset
-      </button>
+      <div class="flex items-center justify-between">
+        <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mr-2" v-model="search" placeholder="Search" autocomplete="off">
+        <button 
+          class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap"
+          @click="handleAddDialog(true)">
+          Add asset
+        </button>
+      </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="bg-white p-6 rounded-lg shadow-lg">
@@ -21,7 +26,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="hover:bg-purple-100" v-for="asset in assetsStore.assets">
+            <tr class="hover:bg-purple-100" :class="{'bg-purple-100': assetsStore.asset?.id === asset.id}" v-for="asset in assetsStore.assets">
               <td class="py-2 px-4 border-b border-purple-300 text-sm">
                 <a href="#" @click="fetchAsset(asset.id)">{{ asset.id }}</a>
               </td>
@@ -48,7 +53,7 @@
             </div>
             <div class="mb-3">
               <label for="description" class="block text-gray-700 font-semibold mb-2">Description</label>
-              <input type="text" id="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" v-model="description">
+              <textarea id="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" v-model="description"></textarea>
             </div>
             <div class="mb-3">
               <label for="value" class="block text-gray-700 font-semibold mb-2">Value</label>
@@ -80,7 +85,6 @@
     </div>
   </div>
 
-  <confirm-dialog v-if="false"/>
   <add-asset @close="handleAddDialog" v-if="addDialogVisible"></add-asset>
   <NuxtNotifications position="bottom right" :speed="500"/>
 </template>
@@ -88,11 +92,14 @@
 <script setup lang="ts">
   import { useAssetsStore } from '@/stores/assets';
   import { storeToRefs } from 'pinia';
-  import { inRange } from 'lodash-es';
+  import { debounce, inRange } from 'lodash-es';
   import type { Asset } from '~/interfaces/asset.interface';
 
+  const route = useRoute();
+  const router = useRouter();
   const assetsStore = useAssetsStore();
-  assetsStore.fetchAssets()
+  
+  assetsStore.fetchAssets(route.query?.name ? route.query?.name as string : '');
 
   const { asset } = storeToRefs(assetsStore);
 
@@ -109,6 +116,14 @@
   const description = ref('');
   const value = ref();
   const location = ref('');
+
+  const search = ref(route.query?.name ? route.query?.name as string : '');
+
+  watch(search, debounce(() => {
+    assetsStore.fetchAssets(search.value);
+    assetsStore.unselectAsset();
+    router.replace({query: {name: search.value}})
+  }, 500))
 
   const deleteDialogVisible = ref(false);
   const addDialogVisible = ref(false);

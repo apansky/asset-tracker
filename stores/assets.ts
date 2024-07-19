@@ -18,9 +18,13 @@ export const useAssetsStore = defineStore('assets', {
     fetchingAsset: false
   }),
   actions: {
-    fetchAssets(): void {
+    fetchAssets(name?: string): void {
       axios
-        .get(`${environment.API_URL}assets`)
+        .get(`${environment.API_URL}assets`, {
+          params: {
+            name
+          }
+        })
         .then((data: AxiosResponse<Asset[]>) => {
           this.fetchingAssets = false;
           this.assets = data.data;
@@ -91,9 +95,14 @@ export const useAssetsStore = defineStore('assets', {
     },
     deleteAsset(id: string): void {
       axios
-        .delete(`${environment.API_URL}assetss/${id}`)
+        .delete(`${environment.API_URL}assets/${id}`)
         .then((data: AxiosResponse<Asset>) => {
-          this.assets = this.assets.filter((asset: any) => asset.id !== data.data.id);
+          this.assets = this.assets.filter((asset: Asset) => asset.id !== data.data.id);
+          const { notify } = useNotification();
+          notify({
+            text: 'Asset deleted',
+            type: 'success'
+          });
         })
         .catch((error) => {
           const { notify } = useNotification();

@@ -13,7 +13,7 @@
         </div>
         <div class="mb-3">
           <label for="description" class="block text-gray-700 font-semibold mb-2">Description</label>
-          <input type="text" id="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" v-model="description">
+          <textarea id="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" v-model="description"></textarea>
         </div>
         <div class="mb-3">
           <label for="value" class="block text-gray-700 font-semibold mb-2">Value</label>
