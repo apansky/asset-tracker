@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios, { type AxiosResponse } from 'axios';
+import axios, { isAxiosError } from 'axios';
 import type { Asset } from '~/interfaces/asset.interface';
 import { environment } from '~/environment';
 
@@ -18,99 +18,99 @@ export const useAssetsStore = defineStore('assets', {
     fetchingAsset: false
   }),
   actions: {
-    fetchAssets(name?: string): void {
-      axios
-        .get(`${environment.API_URL}assets`, {
+    async fetchAssets(name?: string) {
+      try {
+        const { data } = await axios.get(`${environment.API_URL}assets`, {
           params: {
             name
           }
-        })
-        .then((data: AxiosResponse<Asset[]>) => {
-          this.fetchingAssets = false;
-          this.assets = data.data;
-        })
-        .catch((error) => {
+        });
+        this.fetchingAssets = false;
+        this.assets = data;
+      } catch (error: unknown) {
+        if (isAxiosError(error)) {
           const { notify } = useNotification();
           notify({
             text: error.message,
             type: 'error'
           });
-        });
+        }
+      }
     },
-    fetchAsset(id: string): void {
-      axios
-        .get(`${environment.API_URL}assets/${id}`)
-        .then((data: AxiosResponse<Asset>) => {
-          this.fetchingAsset = false;
-          this.asset = data.data;
-        })
-        .catch((error) => {
+    async fetchAsset(id: string) {
+      try {
+        const { data } = await axios.get(`${environment.API_URL}assets/${id}`);
+        this.fetchingAsset = false;
+        this.asset = data;
+      } catch (error: unknown) {
+        if (isAxiosError(error)) {
           const { notify } = useNotification();
           notify({
             text: error.message,
             type: 'error'
           });
+        }
+      }
+    },
+    async updateAsset(asset: Asset) {
+      try {
+        const { data } = await axios.put(`${environment.API_URL}assets/${asset.id}`, asset);
+        this.assets = this.assets.map((asset) => (asset.id === data.id ? data : asset));
+        const { notify } = useNotification();
+        notify({
+          text: 'Asset updated',
+          type: 'success'
         });
+      } catch (error: unknown) {
+        if (isAxiosError(error)) {
+          const { notify } = useNotification();
+          notify({
+            text: error.message,
+            type: 'error'
+          });
+        }
+      }
+    },
+    async addAsset(asset: Asset) {
+      try {
+        const { data } = await axios.post(`${environment.API_URL}assets`, asset);
+        this.assets = [...this.assets, data];
+        const { notify } = useNotification();
+        notify({
+          text: 'Asset added',
+          type: 'success'
+        });
+      } catch (error: unknown) {
+        if (isAxiosError(error)) {
+          const { notify } = useNotification();
+          notify({
+            text: error.message,
+            type: 'error'
+          });
+        }
+      }
+    },
+    async deleteAsset(id: string) {
+      try {
+        const { data } = await axios.delete(`${environment.API_URL}assets/${id}`);
+        this.assets = this.assets.filter((asset: Asset) => asset.id !== data.id);
+        const { notify } = useNotification();
+        notify({
+          text: 'Asset deleted',
+          type: 'success'
+        });
+      } catch (error: unknown) {
+        if (isAxiosError(error)) {
+          const { notify } = useNotification();
+          notify({
+            text: error.message,
+            type: 'error'
+          });
+        }
+      }
     },
     unselectAsset(): void {
       this.asset = null;
-    },
-    updateAsset(asset: Asset): void {
-      axios
-        .put(`${environment.API_URL}assets/${asset.id}`, asset)
-        .then((data: AxiosResponse<Asset>) => {
-          this.assets = this.assets.map((asset) => (asset.id === data.data.id ? data.data : asset));
-          const { notify } = useNotification();
-          notify({
-            text: 'Asset updated',
-            type: 'success'
-          });
-        })
-        .catch((error) => {
-          const { notify } = useNotification();
-          notify({
-            text: error.message,
-            type: 'error'
-          });
-        });
-    },
-    addAsset(asset: Asset): void {
-      axios
-        .post(`${environment.API_URL}assets`, asset)
-        .then((data: AxiosResponse<Asset>) => {
-          this.assets = [...this.assets, data.data];
-          const { notify } = useNotification();
-          notify({
-            text: 'Asset added',
-            type: 'success'
-          });
-        })
-        .catch((error) => {
-          const { notify } = useNotification();
-          notify({
-            text: error.message,
-            type: 'error'
-          });
-        });
-    },
-    deleteAsset(id: string): void {
-      axios
-        .delete(`${environment.API_URL}assets/${id}`)
-        .then((data: AxiosResponse<Asset>) => {
-          this.assets = this.assets.filter((asset: Asset) => asset.id !== data.data.id);
-          const { notify } = useNotification();
-          notify({
-            text: 'Asset deleted',
-            type: 'success'
-          });
-        })
-        .catch((error) => {
-          const { notify } = useNotification();
-          notify({
-            text: error.message,
-            type: 'error'
-          });
-        });
     }
   }
 });
