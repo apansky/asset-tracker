@@ -34,7 +34,7 @@
           :class="{'opacity-50': isInvalidName || isInvalidValue}"
           :disabled="isInvalidName || isInvalidValue"
           @click="submit()">
-          Update asset
+          Add asset
         </button>
       </div>
     </div>
